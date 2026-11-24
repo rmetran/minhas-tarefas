@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#dff3e4">
+<title>Minhas Tarefas</title>
+<style>
+:root{--green:#2f8050;--green2:#e6f5e9;--green3:#f4faf5;--ink:#20352a;--muted:#718078;--line:#e3ece5;--white:#fff;--red:#b94b45;--amber:#a76b22}
+*{box-sizing:border-box}body{margin:0;background:#f6faf7;color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:24px 16px 50px}.hero{background:linear-gradient(120deg,#e2f4e6,#f5fbf5);border:1px solid #d6eadb;border-radius:24px;padding:24px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:clamp(25px,4vw,34px);margin:0;color:#24633d}.sub{color:#547260;margin-top:5px}.leaf{font-size:40px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.stat,.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:17px}.stat strong{display:block;font-size:30px;color:var(--green)}.stat span{font-size:13px;color:var(--muted)}
+.layout{display:grid;grid-template-columns: minmax(280px,.85fr) minmax(0,1.4fr);gap:18px}.panel h2{font-size:18px;margin:0 0 14px}
+label{display:block;font-size:13px;font-weight:650;margin:12px 0 5px}input,select,textarea{width:100%;border:1px solid #dce8de;border-radius:11px;padding:11px 12px;background:#fff;color:var(--ink);font:inherit}textarea{min-height:75px;resize:vertical}
+button{border:0;border-radius:11px;padding:11px 14px;background:var(--green);color:#fff;font:650 14px inherit;cursor:pointer}button:hover{filter:brightness(.96)}button.secondary{background:#edf5ef;color:#326a46}button.danger{background:#fff0ee;color:var(--red);padding:7px 10px}.full{width:100%;margin-top:15px}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}.filters button{background:#edf4ef;color:#42614d;padding:8px 12px}.filters button.active{background:var(--green);color:white}
+.task{border:1px solid var(--line);border-radius:14px;padding:13px;margin:10px 0;background:#fff}.tasktop{display:flex;align-items:flex-start;gap:10px}.task input[type=checkbox]{width:18px;height:18px;margin-top:3px;accent-color:var(--green)}.taskname{font-weight:700;flex:1}.done .taskname{text-decoration:line-through;color:#849188}.meta{font-size:12px;color:var(--muted);margin-top:5px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.pill{font-size:11px;border-radius:30px;padding:4px 8px;background:#edf6ef;color:#39704a}.pill.high{background:#fff0ee;color:#ae4942}.pill.late{background:#fff3df;color:#98631d}.actions{display:flex;gap:7px;align-items:center}
+.empty{text-align:center;padding:28px 10px;color:var(--muted);background:var(--green3);border-radius:14px}
+.note{font-size:12px;color:var(--muted);margin-top:14px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+@media(max-width:760px){.wrap{padding:14px 12px 35px}.layout{grid-template-columns:1fr}.hero{padding:19px}.stats{gap:8px}.stat{padding:12px}.stat strong{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero"><div><h1>Minhas Tarefas</h1><div class="sub">Organize seu dia com leveza 🌿</div></div><div class="leaf" aria-hidden="true">🍃</div></header>
+<section class="stats">
+ <div class="stat"><strong id="pending">0</strong><span>Pendentes</span></div>
+ <div class="stat"><strong id="completed">0</strong><span>Concluídas</span></div>
+ <div class="stat"><strong id="overdue">0</strong><span>Atrasadas</span></div>
+</section>
+<main class="layout">
+<section class="panel">
+<h2>＋ Nova tarefa</h2>
+<form id="taskForm">
+<label for="name">Nome da atividade</label><input id="name" required maxlength="100" placeholder="Ex.: Enviar relatório">
+<label for="description">Descrição / observações</label><textarea id="description" placeholder="Detalhes importantes (opcional)"></textarea>
+<label for="category">Categoria</label><select id="category"><option>RH / Trabalho</option><option>Pessoal</option><option>Igreja / Ministério</option><option>Financeiro</option><option>Outros</option></select>
+<label for="date">Data de vencimento</label><input id="date" type="date">
+<label for="priority">Prioridade</label><select id="priority"><option>Baixa</option><option selected>Média</option><option>Alta</option></select>
+<label for="repeat">Repetição</label><select id="repeat"><option value="none">Não se repete</option><option value="daily">Diariamente</option><option value="weekly">Semanalmente</option><option value="monthly">Mensalmente</option></select>
+<button class="full" type="submit">Adicionar tarefa</button>
+</form>
+<p class="note">Suas tarefas ficam salvas neste navegador e neste dispositivo.</p>
+<p class="note" id="saveStatus" role="status" aria-live="polite">As tarefas serão salvas quando você clicar em “Adicionar tarefa”.</p>
+</section>
+<section class="panel">
+<div class="toolbar"><h2>Minha lista</h2><button class="secondary" id="export">Exportar backup</button></div>
+<div class="filters" id="filters">
+<button class="active" data-filter="Todas">Todas</button><button data-filter="Pendentes">Pendentes</button><button data-filter="Concluídas">Concluídas</button>
+</div>
+<div id="list"></div>
+<p class="note">O backup permite levar seus dados para outro dispositivo. Sincronização automática e e-mails do Outlook serão configurados na próxima etapa.</p>
+</section>
+</main>
+</div>
+<script>
+const KEY='minhasTarefas_v1';
+let tasks=[]; let filter='Todas';
+const $=id=>document.getElementById(id);
+try {
+  const stored = localStorage.getItem(KEY);
+  tasks = stored ? JSON.parse(stored) : [];
+  if (!Array.isArray(tasks)) tasks = [];
+} catch(e) {
+  tasks = [];
+  window.addEventListener('DOMContentLoaded', () => {
+    $('saveStatus').textContent = 'Não foi possível ler as tarefas salvas neste navegador. Verifique as permissões de armazenamento.';
+  });
+}
+const today=()=>new Date().toISOString().slice(0,10);
+function save(){
+  try {
+    localStorage.setItem(KEY, JSON.stringify(tasks));
+    $('saveStatus').textContent = '✓ Tarefa salva neste navegador e dispositivo.';
+    render();
+    return true;
+  } catch(e) {
+    $('saveStatus').textContent = 'Não foi possível salvar. Verifique se o armazenamento do navegador está permitido e se há espaço disponível.';
+    render();
+    return false;
+  }
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+ const pending=tasks.filter(t=>!t.done), completed=tasks.filter(t=>t.done);
+ $('pending').textContent=pending.length;$('completed').textContent=completed.length;
+ $('overdue').textContent=pending.filter(t=>t.date&&t.date<today()).length;
+ const shown=tasks.filter(t=>filter==='Todas'||(filter==='Pendentes'&&!t.done)||(filter==='Concluídas'&&t.done));
+ $('list').innerHTML=shown.length?shown.map(t=>`<article class="task ${t.done?'done':''}">
+ <div class="tasktop"><input aria-label="Marcar como concluída" type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
+ <div class="taskname">${esc(t.name)}<div class="meta">${esc(t.category)}${t.description?' · '+esc(t.description):''}</div></div>
+ <div class="actions"><button class="danger" onclick="deleteTask('${t.id}')" aria-label="Excluir tarefa">Excluir</button></div></div>
+ <div class="pills"><span class="pill ${t.priority==='Alta'?'high':''}">${esc(t.priority)}</span>
+ ${t.date?`<span class="pill ${!t.done&&t.date<today()?'late':''}">${new Date(t.date+'T12:00:00').toLocaleDateString('pt-BR')}</span>`:''}
+ ${t.repeat!=='none'?`<span class="pill">↻ ${t.repeat==='daily'?'Diária':t.repeat==='weekly'?'Semanal':'Mensal'}</span>`:''}
+ ${!t.done&&t.date&&t.date<today()?'<span class="pill late">Atrasada</span>':''}</div></article>`).join(''):'<div class="empty">🌱<br>Não há tarefas nesta visualização.<br>Cadastre sua primeira atividade!</div>';
+}
+$('taskForm').addEventListener('submit',e=>{
+ e.preventDefault();const name=$('name').value.trim();if(!name)return;
+ tasks.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),name,description:$('description').value.trim(),category:$('category').value,date:$('date').value,priority:$('priority').value,repeat:$('repeat').value,done:false,createdAt:new Date().toISOString()});
+ save();e.target.reset();$('priority').value='Média';
+});
+$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;document.querySelectorAll('#filters button').forEach(x=>x.classList.toggle('active',x===b));render()});
+window.toggleTask=(id,done)=>{tasks=tasks.map(t=>t.id===id?{...t,done}:t);save()};
+window.deleteTask=id=>{if(confirm('Excluir esta tarefa?')){tasks=tasks.filter(t=>t.id!==id);save()}};
+$('export').addEventListener('click',()=>{
+ const blob=new Blob([JSON.stringify(tasks,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-minhas-tarefas.json';a.click();URL.revokeObjectURL(a.href);
+});
+render();
+</script>
+</body></html>
